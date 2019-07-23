@@ -1,6 +1,10 @@
 package com.littlewind.demo.controller;
 
+import java.util.HashMap;
+import java.util.Set;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.littlewind.demo.customexception.CustomUnauthorizedException;
+import com.littlewind.demo.model.Shop;
 import com.littlewind.demo.model.User;
 import com.littlewind.demo.model.UserLite;
 //import com.littlewind.demo.service.SecurityService;
@@ -40,25 +45,40 @@ public class UserController {
     }
     
     @GetMapping("/login")
-//    public String login(@RequestBody User userForm) {
     public String login() {
-//        userService.save(userForm);
-
-//        securityService.autoLogin(userForm.getUsername(), userForm.getPasswordConfirm());
-
         return "Login";
     }
     
 
     @GetMapping({"/", "/welcome"})
-    public String welcome() {
-        return "Hello World";
+    public HashMap<String, String> welcome() {
+    	HashMap<String, String> result = new HashMap<>();
+    	result.put("message", "Hello World");
+    	return result;
     }
     
     
-    @GetMapping("/addshop")
-    public String addshop() {
-        return "Add new Shop";
+    @PostMapping("/shop")
+    public HashMap<String, Object> addshop(@RequestBody Shop newShop, @RequestHeader("Authorization") String token) {
+    	boolean success = false;
+    	HashMap<String, Object> result = new HashMap<>();
+    	if (newShop != null) {
+    		System.out.println("shop_id: "+newShop.toString()+"\n");
+    		success = userService.addShop(newShop, token);
+    	}
+    	
+
+		if (success) {
+			result.put("success", 1);
+		} else {
+			result.put("success", 0);
+		}
+        return result;
+    }
+    
+    @DeleteMapping("/shop/{shop_id}")
+    public Set<Shop> removeShop(@PathVariable long shop_id,@RequestHeader("Authorization") String token) {
+        return userService.removeShop(shop_id, token);
     }
     
     @RequestMapping(value = "/users/{userid}", method = RequestMethod.GET)

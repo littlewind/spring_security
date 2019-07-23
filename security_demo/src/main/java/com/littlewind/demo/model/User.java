@@ -2,6 +2,7 @@ package com.littlewind.demo.model;
 
 import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -41,7 +42,7 @@ public class User {
     @Transient
     private int success;
 
-    @OneToMany
+    @OneToMany(cascade=CascadeType.ALL)
     private Set<Shop> shop;
 
     public Long getId() {
@@ -100,12 +101,20 @@ public class User {
 		this.shop = shop;
 	}
 
+	public boolean addShop(Shop shop) {
+		return this.shop.add(shop);
+	}
+	
 	public int getSuccess() {
 		return success;
 	}
 
 	public void setSuccess(int success) {
 		this.success = success;
+	}
+
+	public boolean removeShop(Shop shop) {
+		return this.shop.remove(shop);
 	}
 
 }

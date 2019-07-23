@@ -1,5 +1,8 @@
 package com.littlewind.demo.controller;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -56,6 +59,15 @@ public class JwtAuthenticationController {
 		user_info.setToken(token);
 		
 		return user_info;
+	}
+	
+	@RequestMapping(value = "/authenticate", method = RequestMethod.GET)
+	public Map<String, Long> authen() {
+
+		Map<String, Long> map = new HashMap<>();
+		map.put("success", 1L);
+		
+		return map;
 	}
 
 	private void authenticate(String email, String password) throws Exception {
