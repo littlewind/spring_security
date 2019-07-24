@@ -1,5 +1,9 @@
 package com.littlewind.demo.service;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 //import org.mindrot.jbcrypt.BCrypt;
@@ -10,6 +14,7 @@ import org.springframework.stereotype.Service;
 import com.littlewind.demo.customexception.CustomUnauthorizedException;
 import com.littlewind.demo.model.Shop;
 import com.littlewind.demo.model.User;
+import com.littlewind.demo.model.UserLite;
 import com.littlewind.demo.repository.ShopRepository;
 import com.littlewind.demo.repository.UserRepository;
 import com.littlewind.demo.util.JwtTokenUtil;
@@ -59,6 +64,18 @@ public class UserServiceImpl implements UserService {
 		}
 		
 		return userRepository.findById(userId).get();
+	}
+	
+	@Override
+	public List<Shop> getShop(String token) {
+		if (token.startsWith("Bearer ")) {
+			token = token.substring(7);
+		}
+		String uid = jwtTokenUtil.getIdFromToken(token);
+		User user = userRepository.findById(Long.valueOf(uid)).get();
+		
+		List<Shop> shopList = new ArrayList<>(user.getShop());
+		return shopList;
 	}
 
 	@Override
@@ -115,5 +132,61 @@ public class UserServiceImpl implements UserService {
 
 		return user.getShop();
 	}
+
+	@Override
+	public Map<String, Object> changeInfo(UserLite user, String token) {
+		// get the user
+		if (token.startsWith("Bearer ")) {
+			token = token.substring(7);
+		}
+		String uid = jwtTokenUtil.getIdFromToken(token);
+		User mUser = userRepository.findById(Long.valueOf(uid)).get();
+		
+		//change info
+		if (user.getUsername()!=null) {
+			mUser.setUsername(user.getUsername());
+		}
+		if (user.getPhone()!=null) {
+			mUser.setPhone(user.getPhone());
+		}
+		
+		// save back to the database
+		userRepository.save(mUser);
+		
+		Map<String, Object> map = new HashMap<>();
+		map.put("username", mUser.getUsername());
+		map.put("phone", mUser.getPhone());
+		
+		return map;
+	}
+
+	@Override
+	public Map<String, Object> changePassword(String old_password, String new_password, String token) {
+		Map<String, Object> result = new HashMap<>();
+		
+		// get the user
+		if (token.startsWith("Bearer ")) {
+			token = token.substring(7);
+		}
+		String uid = jwtTokenUtil.getIdFromToken(token);
+		User mUser = userRepository.findById(Long.valueOf(uid)).get();
+		
+		// check the confirm password, if not match -> return false
+		if (!bCryptPasswordEncoder.matches(old_password, mUser.getPassword())) {
+			result.put("success", 0);
+			return result;
+		}
+		
+		// change password
+		mUser.setPassword(bCryptPasswordEncoder.encode(new_password));
+		
+		// save back to the database
+		userRepository.save(mUser);
+			
+		result.put("success", 1);
+		
+		return result;
+	}
+
 
 }

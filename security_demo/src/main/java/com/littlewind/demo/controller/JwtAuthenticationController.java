@@ -24,6 +24,7 @@ import com.littlewind.demo.util.JwtTokenUtil;
 
 @RestController
 @CrossOrigin
+@RequestMapping("/api/v1")
 public class JwtAuthenticationController {
 	
 	@Autowired

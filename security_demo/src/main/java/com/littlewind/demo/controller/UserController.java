@@ -1,6 +1,8 @@
 package com.littlewind.demo.controller;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,22 +20,16 @@ import com.littlewind.demo.customexception.CustomUnauthorizedException;
 import com.littlewind.demo.model.Shop;
 import com.littlewind.demo.model.User;
 import com.littlewind.demo.model.UserLite;
-//import com.littlewind.demo.service.SecurityService;
 import com.littlewind.demo.service.UserService;
 
-//@Controller
 @RestController
+@RequestMapping("/api/v1")
 public class UserController {
     @Autowired
     private UserService userService;
   
     @GetMapping("/registration")
-//    public String registration(@RequestBody User userForm) {
     public String registration() {
-//        userService.save(userForm);
-
-//        securityService.autoLogin(userForm.getUsername(), userForm.getPasswordConfirm());
-
         return "Registration";
     }
     
@@ -57,6 +53,11 @@ public class UserController {
     	return result;
     }
     
+    
+    @GetMapping("/shop")
+    public List<Shop> getShop(@RequestHeader("Authorization") String token) {
+        return userService.getShop(token);
+    }
     
     @PostMapping("/shop")
     public HashMap<String, Object> addshop(@RequestBody Shop newShop, @RequestHeader("Authorization") String token) {
@@ -84,5 +85,17 @@ public class UserController {
     @RequestMapping(value = "/users/{userid}", method = RequestMethod.GET)
     public User findUserByUserId(@PathVariable("userid") long userId, @RequestHeader("Authorization") String token) throws CustomUnauthorizedException {
         return userService.findOne(userId, token);
+    }
+    
+    @PostMapping("/user/updateinfo")
+    public Map<String, Object> changeInfo(@RequestBody UserLite user, @RequestHeader("Authorization") String token) {
+    	return userService.changeInfo(user, token);
+    }
+    
+    @PostMapping("/user/changepassword")
+    public Map<String, Object> changePassword(@RequestBody Map<String, String> map, @RequestHeader("Authorization") String token) {
+    	String old_password = map.get("old_password");
+    	String new_password = map.get("new_password");
+    	return userService.changePassword(old_password, new_password, token);
     }
 }
