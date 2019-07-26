@@ -1,11 +1,15 @@
 package com.littlewind.demo.model;
 
+import java.util.Date;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 @Entity
 @Table(name = "shop")
@@ -18,6 +22,9 @@ public class Shop {
     private Long shop_id;
 
     private String name;
+    
+    @Column(name = "create_date", insertable=false, nullable = false)
+    private Date createDate = new Date();
     
     public Shop() {
 		super();
@@ -48,4 +55,15 @@ public class Shop {
         this.name = name;
     }
 
+
+	public Date getCreateDate() {
+		return createDate;
+	}
+
+
+	public void setCreateDate(Date createDate) {
+		this.createDate = createDate;
+	}
+    
+    
 }
