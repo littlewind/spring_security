@@ -83,7 +83,7 @@ public class UserController {
     public HashMap<String, Object> addshop(@RequestBody Shop newShop, @RequestHeader("Authorization") String token) {
     	int success = -1;
     	HashMap<String, Object> result = new HashMap<>();
-    	if (newShop != null) {
+    	if (newShop != null && newShop.getShop_id()!= null && newShop.getName()!= null) {
 //    		System.out.println("shop_id: "+newShop.toString()+"\n");
     		logger.debug("shop_id: "+newShop.toString()+"\n");
     		success = userService.addShop(newShop, token);
