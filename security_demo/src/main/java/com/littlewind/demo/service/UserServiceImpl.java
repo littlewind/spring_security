@@ -1,20 +1,25 @@
 package com.littlewind.demo.service;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 //import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.littlewind.demo.customexception.CustomUnauthorizedException;
+import com.littlewind.demo.model.PasswordResetToken;
 import com.littlewind.demo.model.Shop;
 import com.littlewind.demo.model.User;
+import com.littlewind.demo.model.UserBasicInfo;
 import com.littlewind.demo.model.UserLite;
+import com.littlewind.demo.repository.PasswordTokenRepository;
 import com.littlewind.demo.repository.ShopRepository;
 import com.littlewind.demo.repository.UserRepository;
 import com.littlewind.demo.util.JwtTokenUtil;
@@ -26,6 +31,9 @@ public class UserServiceImpl implements UserService {
     
     @Autowired
     private ShopRepository shopRepository;
+    
+    @Autowired
+    private PasswordTokenRepository passwordTokenRepository;
 
     @Autowired
     private BCryptPasswordEncoder bCryptPasswordEncoder;
@@ -33,7 +41,8 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
 
-
+    Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
+    
     @Override
     public User save(User user) {
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
@@ -54,16 +63,14 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public User findOne(long userId, String token) throws CustomUnauthorizedException {
+	public UserBasicInfo findOne(String token) {
 		if (token.startsWith("Bearer ")) {
 			token = token.substring(7);
 		}
-		String id_stored_in_token = jwtTokenUtil.getIdFromToken(token);
-		if (!id_stored_in_token.equals(String.valueOf(userId))) {
-			throw new CustomUnauthorizedException("Unauthorized");
-		}
-		
-		return userRepository.findById(userId).get();
+		String email = jwtTokenUtil.getUsernameFromToken(token);
+		User user = userRepository.findByEmail(email);
+		UserBasicInfo info = new UserBasicInfo(user);
+		return info;
 	}
 	
 	@Override
@@ -79,10 +86,13 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public boolean addShop(Shop shop, String token) {
-		
+	public int addShop(Shop shop, String token) {
 		Long shop_id = shop.getShop_id();
-		System.out.println("shop_id: "+shop_id);
+//		System.out.println("UserServiceImpl: shop_id: "+shop_id);
+		logger.debug("shop_id: "+shop_id);
+		String shop_name = shop.getName();
+//		System.out.println("UserServiceImpl: shop_name: "+shop_name);
+		logger.debug("shop_name: "+shop_name);
 		
 		if (token.startsWith("Bearer ")) {
 			token = token.substring(7);
@@ -95,21 +105,28 @@ public class UserServiceImpl implements UserService {
 		String uid = jwtTokenUtil.getIdFromToken(token);
 		User user = userRepository.findById(Long.valueOf(uid)).get();
 		for (Shop mShop : user.getShop()) {
-			System.out.println(mShop.getShop_id());
 			if (mShop.getShop_id().equals(shop_id)) {
-				return false;
+				logger.error("Duplicate id");
+				return 2;
+			}
+			
+			if (mShop.getName().equals(shop_name)) {
+				logger.error("Duplicate shop_name");
+				return 0;
 			}
 		}
 		
+		shop.setCreateDate(new Date());
 		shopRepository.saveAndFlush(shop);
 		user.addShop(shop);
+		
 
 //		if (!user.addShop(shop)) {
 //			return false;
 //		}
 		
 		userRepository.save(user);
-		return true;
+		return 1;
 	}
 
 	@Override
@@ -120,13 +137,11 @@ public class UserServiceImpl implements UserService {
 		String uid = jwtTokenUtil.getIdFromToken(token);
 		User user = userRepository.findById(Long.valueOf(uid)).get();
 		for (Shop shop: user.getShop()) {
-			System.out.println(shop.getShop_id());
 			if (shop.getShop_id()==shop_id) {
 				if (user.removeShop(shop)) {
 					userRepository.save(user);
 					return user.getShop();
 				}
-//				return user.getShop();
 			}
 		}
 
@@ -186,6 +201,18 @@ public class UserServiceImpl implements UserService {
 		result.put("success", 1);
 		
 		return result;
+	}
+
+	@Override
+	public void createPasswordResetTokenForUser(User user, String token) {
+		final PasswordResetToken myToken = new PasswordResetToken(user, token);
+        passwordTokenRepository.save(myToken);
+	}
+
+	@Override
+	public void resetPassword(User user, String new_password) {
+		user.setPassword(bCryptPasswordEncoder.encode(new_password));
+		userRepository.save(user);
 	}
 
 

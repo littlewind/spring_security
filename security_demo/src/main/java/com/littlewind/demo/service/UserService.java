@@ -4,9 +4,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.littlewind.demo.customexception.CustomUnauthorizedException;
 import com.littlewind.demo.model.Shop;
 import com.littlewind.demo.model.User;
+import com.littlewind.demo.model.UserBasicInfo;
 import com.littlewind.demo.model.UserLite;
 
 public interface UserService {
@@ -16,9 +16,9 @@ public interface UserService {
     
     User findByEmail(String email);
 
-	User findOne(long userId, String token) throws CustomUnauthorizedException;
+	UserBasicInfo findOne(String token);
 
-	boolean addShop(Shop shop, String token);
+	int addShop(Shop shop, String token);
 
 	Set<Shop> removeShop(long shop_id, String token);
 
@@ -26,5 +26,9 @@ public interface UserService {
 
 	Map<String, Object> changePassword(String old_password, String new_password, String token);
 
-	List<Shop> getShop(String token); 
+	List<Shop> getShop(String token);
+	
+	public void createPasswordResetTokenForUser(final User user, final String token);
+	
+	public void resetPassword(User user, String new_password);
 }

@@ -44,7 +44,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable()
             .authorizeRequests()
-            .antMatchers("/api/v1/test/**", "/api/v1/registration", "/api/v1/login", "/api/v1/welcome").permitAll()
+            .antMatchers("/api/v1/test/**", "/api/v1/registration", "/api/v1/login", "/api/v1/welcome", "/api/v1/user/resetPassword/**").permitAll()
             .anyRequest().authenticated()
             
             .and()
@@ -55,6 +55,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         
         // Add a filter to validate the tokens with every request
      	http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+     	
+     	// Fixing 401s with CORS Preflights and Spring Security
+     	http.cors();
     }
 
 

@@ -8,8 +8,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 
 @Entity
 @Table(name = "shop")
@@ -23,12 +21,24 @@ public class Shop {
 
     private String name;
     
-    @Column(name = "create_date", insertable=false, nullable = false)
+    @Column(name = "create_date", nullable = false)
     private Date createDate = new Date();
     
     public Shop() {
 		super();
 	}
+    
+    
+
+
+	public Shop(Long shop_id, String name) {
+		super();
+		this.shop_id = shop_id;
+		this.name = name;
+		this.createDate = new Date();
+	}
+
+
 
 
 	public Long getId() {

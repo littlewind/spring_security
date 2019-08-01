@@ -7,6 +7,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,13 +30,16 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
 	@Autowired
 	private JwtTokenUtil jwtTokenUtil;
+	
+	Logger logger = LoggerFactory.getLogger(JwtRequestFilter.class);
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
 			throws ServletException, IOException {
 
 		final String requestTokenHeader = request.getHeader("Authorization");
-		System.out.println(	"\nJwtRequestFilter_requestTokenHeader: "+requestTokenHeader + "\n");
+//		System.out.println(	"\nJwtRequestFilter_requestTokenHeader: "+requestTokenHeader + "\n");
+		logger.debug("requestTokenHeader: "+requestTokenHeader + "\n");
 
 		String email = null;
 		String jwtToken = null;
@@ -49,15 +54,18 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
 			try {
 				email = jwtTokenUtil.getUsernameFromToken(jwtToken);
-				System.out.println("JwtRequestFilter_Email from token: "+email);
+//				System.out.println("JwtRequestFilter_Email from token: "+email);
+				logger.debug("Email from token: "+email);
 			} catch (IllegalArgumentException e) {
-				System.out.println("Unable to get JWT Token");
+//				System.out.println("Unable to get JWT Token");
+				logger.error("Unable to get JWT Token");
 				e.printStackTrace();
 			} catch (ExpiredJwtException e) {
-				System.out.println("JWT Token has expired");
+//				System.out.println("JWT Token has expired");
+				logger.error("\nJWT Token has expired\n");
 			}
 		} else {
-//			logger.warn("JWT Token does not begin with Bearer String");
+			logger.warn("JWT Token does not begin with Bearer String");
 		}
 
 		// Once we get the token validate it.

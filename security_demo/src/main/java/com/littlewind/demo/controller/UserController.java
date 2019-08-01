@@ -1,11 +1,20 @@
 package com.littlewind.demo.controller;
 
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,12 +23,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.littlewind.demo.customexception.CustomUnauthorizedException;
+import com.littlewind.demo.model.PasswordResetToken;
 import com.littlewind.demo.model.Shop;
 import com.littlewind.demo.model.User;
+import com.littlewind.demo.model.UserBasicInfo;
 import com.littlewind.demo.model.UserLite;
+import com.littlewind.demo.repository.PasswordTokenRepository;
 import com.littlewind.demo.service.UserService;
 
 @RestController
@@ -27,6 +39,14 @@ import com.littlewind.demo.service.UserService;
 public class UserController {
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private PasswordTokenRepository passwordTokenRepository;
+    
+    @Autowired
+    private JavaMailSender javaMailSender;
+    
+    Logger logger = LoggerFactory.getLogger(UserController.class);
   
     @GetMapping("/registration")
     public String registration() {
@@ -44,7 +64,7 @@ public class UserController {
     public String login() {
         return "Login";
     }
-    
+        
 
     @GetMapping({"/", "/welcome"})
     public HashMap<String, String> welcome() {
@@ -61,19 +81,18 @@ public class UserController {
     
     @PostMapping("/shop")
     public HashMap<String, Object> addshop(@RequestBody Shop newShop, @RequestHeader("Authorization") String token) {
-    	boolean success = false;
+    	int success = -1;
     	HashMap<String, Object> result = new HashMap<>();
     	if (newShop != null) {
-    		System.out.println("shop_id: "+newShop.toString()+"\n");
+//    		System.out.println("shop_id: "+newShop.toString()+"\n");
+    		logger.debug("shop_id: "+newShop.toString()+"\n");
     		success = userService.addShop(newShop, token);
     	}
     	
 
-		if (success) {
-			result.put("success", 1);
-		} else {
-			result.put("success", 0);
-		}
+
+		result.put("success", success);
+
         return result;
     }
     
@@ -82,9 +101,9 @@ public class UserController {
         return userService.removeShop(shop_id, token);
     }
     
-    @RequestMapping(value = "/users/{userid}", method = RequestMethod.GET)
-    public User findUserByUserId(@PathVariable("userid") long userId, @RequestHeader("Authorization") String token) throws CustomUnauthorizedException {
-        return userService.findOne(userId, token);
+    @RequestMapping(value = "/user/info", method = RequestMethod.GET)
+    public UserBasicInfo findUserByUserId(@RequestHeader("Authorization") String token) {
+        return userService.findOne(token);
     }
     
     @PostMapping("/user/updateinfo")
@@ -97,5 +116,110 @@ public class UserController {
     	String old_password = map.get("old_password");
     	String new_password = map.get("new_password");
     	return userService.changePassword(old_password, new_password, token);
+    }
+    
+    @PostMapping("/user/resetPassword")
+	public Map<String, Object> resetPassword(@RequestParam("email") String userEmail) {
+    Map<String, Object> result = new HashMap<>();
+	User user = userService.findByEmail(userEmail);
+	if (user == null) {
+	    result.put("success", 0);
+	    result.put("message", "Cannot find account with email: "+userEmail);
+	    return result;
+	}
+	String token = UUID.randomUUID().toString().replace("-", "");
+	userService.createPasswordResetTokenForUser(user, token);
+	
+	sendEmail(token, userEmail);
+	
+	result.put("success", 1);
+	result.put("message", "A link to reset password has been sent to your email: "+userEmail);
+	
+	return result;
+	}
+    
+    @PostMapping("/user/resetPassword/step2")
+	public Map<String, Object> resetPassword2(@RequestBody Map<String, String> body) {
+		String token = body.get("token");
+		String new_password = body.get("new_password");
+		Map<String, Object> result = new HashMap<>();
+		
+		PasswordResetToken passToken = validatePasswordResetToken(token);
+		
+		if (passToken==null) {
+			result.put("success", 0);
+			return result;
+		}
+		
+		User user = passToken.getUser();
+		userService.resetPassword(user, new_password);
+		
+		result.put("success", 1);
+		return result;
+    }
+    
+    @Async
+    void sendEmail(String token, String receiver) {
+    	int noOfQuickServiceThreads = 5;
+    	
+    	ScheduledExecutorService quickService = Executors.newScheduledThreadPool(noOfQuickServiceThreads); // Creates a thread pool that reuses fixed number of threads(as specified by noOfThreads in this case).
+    	
+    	
+		String content = "Hello,\n" + 
+				"\n" + 
+				"Follow this link to reset your password( this link will expire in 15 minutes):\n" + 
+				"\n\t" +
+				"https://google.com?token="+
+				token + 
+				"\n\n" + 
+				"If you didn’t ask to reset your password, you can ignore this email.\n" + 
+				"\n" + 
+				"Thanks,\n" + 
+				"\n" + 
+				"Your Sapo Decorate team";
+		
+        SimpleMailMessage msg = new SimpleMailMessage();
+//        msg.setTo("to_1@gmail.com", "to_2@gmail.com", "to_3@yahoo.com");
+        msg.setTo(receiver);
+        
+        msg.setSubject("Reset your password for Sapo Decorate");
+        msg.setText(content);
+
+//        javaMailSender.send(msg);
+        quickService.submit(new Runnable() {
+			@Override
+			public void run() {
+				try{
+					javaMailSender.send(msg);
+				}catch(Exception e){
+					logger.error("Exception occured while send a mail : ",e);
+				}
+			}
+		});
+
+    }
+    
+    public PasswordResetToken validatePasswordResetToken(String token) {
+//    	System.out.println("_UserController: String token:  "+token);
+    	logger.debug("String token:  "+token);
+        PasswordResetToken passToken = passwordTokenRepository.findByToken(token);
+        
+        if (passToken == null ) {
+//        	System.out.println("_UserController: PasswordResetToken passToken is null");
+        	logger.error("PasswordResetToken passToken is null");
+        	
+        }
+        if (passToken != null) {     
+	        Calendar cal = Calendar.getInstance();
+	        if ((passToken.getExpiryDate()
+	            .getTime() - cal.getTime()
+	            .getTime()) <= 0) {
+//	        	System.out.println("_UserController: token expired");
+	        	logger.error("token expired");
+	            return null;	// expired token
+	        }
+        }
+    
+        return passToken; // valid token
     }
 }

@@ -2,7 +2,6 @@ package com.littlewind.demo.config;
 
 import javax.sql.DataSource;
 
-import org.springframework.boot.autoconfigure.flyway.FlywayDataSource;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;

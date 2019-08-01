@@ -20,7 +20,7 @@ public class UserDetailsServiceImpl implements UserDetailsService{
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String email) {
         User user = userRepository.findByEmail(email);
-        if (user == null) throw new AuthenticationServiceException("Cannot find any account ưith this email: "+email);
+        if (user == null) throw new AuthenticationServiceException("Cannot find any account with this email: "+email);
 
         return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), new ArrayList<>());
     }
