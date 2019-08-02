@@ -129,8 +129,9 @@ public class UserServiceImpl implements UserService {
 		return 1;
 	}
 
+
 	@Override
-	public Set<Shop> removeShop(long shop_id, String token) {
+	public Set<Shop> deleteShop(long shop_id, String token) {
 		if (token.startsWith("Bearer ")) {
 			token = token.substring(7);
 		}
@@ -142,6 +143,25 @@ public class UserServiceImpl implements UserService {
 					userRepository.save(user);
 					return user.getShop();
 				}
+			}
+		}
+
+		return user.getShop();
+	}
+
+	
+	@Override
+	public Set<Shop> removeShop(long shop_id, String token) {
+		if (token.startsWith("Bearer ")) {
+			token = token.substring(7);
+		}
+		String uid = jwtTokenUtil.getIdFromToken(token);
+		User user = userRepository.findById(Long.valueOf(uid)).get();
+		for (Shop shop: user.getShop()) {
+			if (shop.getShop_id()==shop_id) {
+				shop.setStatus(0L);
+				shopRepository.save(shop);
+				return user.getShop();
 			}
 		}
 

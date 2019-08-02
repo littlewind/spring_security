@@ -101,6 +101,11 @@ public class UserController {
         return userService.removeShop(shop_id, token);
     }
     
+    @DeleteMapping("/shop/delete/{shop_id}")
+    public Set<Shop> deleteShop(@PathVariable long shop_id,@RequestHeader("Authorization") String token) {
+        return userService.deleteShop(shop_id, token);
+    }
+    
     @RequestMapping(value = "/user/info", method = RequestMethod.GET)
     public UserBasicInfo findUserByUserId(@RequestHeader("Authorization") String token) {
         return userService.findOne(token);

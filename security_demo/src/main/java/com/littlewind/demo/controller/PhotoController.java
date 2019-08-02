@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -51,13 +52,27 @@ public class PhotoController {
 	}
 
 
+//	@RequestMapping(value = "/upload", method = RequestMethod.POST)
+//	public void uploadPhoto1(String item_id, int img_order, String photo_url, @RequestHeader("Authorization") String token){
+//		if (token.startsWith("Bearer ")) {
+//			token = token.substring(7);
+//		}
+//		String userId = jwtTokenUtil.getIdFromToken(token);
+//		
+//		uploadPhoto(userId, item_id, img_order, photo_url);
+//	}
+	
+	
 	@RequestMapping(value = "/upload", method = RequestMethod.POST)
-	public void uploadPhoto1(String item_id, int img_order, String photo_url, @RequestHeader("Authorization") String token){
+	public <T> void uploadPhoto2(@RequestBody Map<String, T> map, @RequestHeader("Authorization") String token){
 		if (token.startsWith("Bearer ")) {
 			token = token.substring(7);
 		}
 		String userId = jwtTokenUtil.getIdFromToken(token);
-		
+		String item_id = String.valueOf(map.get("item_id"));
+		int img_order = (int) map.get("img_order"); 
+		String photo_url = (String) map.get("photo_url");
+		System.out.println(photo_url.substring(0, 15));
 		uploadPhoto(userId, item_id, img_order, photo_url);
 	}
 	

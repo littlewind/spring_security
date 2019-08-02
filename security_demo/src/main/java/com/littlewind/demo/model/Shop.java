@@ -24,18 +24,28 @@ public class Shop {
     @Column(name = "create_date", nullable = false)
     private Date createDate = new Date();
     
+    
+    private Long status = 1L;
+    
     public Shop() {
 		super();
 	}
     
-    
-
-
 	public Shop(Long shop_id, String name) {
 		super();
 		this.shop_id = shop_id;
 		this.name = name;
 		this.createDate = new Date();
+	}
+	
+	public Shop(Long shop_id, String name, Long status) {
+		this(shop_id, name);
+		if (status!=null) {
+			this.status = status;
+		} else {
+			this.status = 1L;
+		}
+
 	}
 
 
@@ -65,14 +75,20 @@ public class Shop {
         this.name = name;
     }
 
-
 	public Date getCreateDate() {
 		return createDate;
 	}
 
-
 	public void setCreateDate(Date createDate) {
 		this.createDate = createDate;
+	}
+	
+	public Long getStatus() {
+		return status;
+	}
+
+	public void setStatus(Long status) {
+		this.status = status;
 	}
     
     
