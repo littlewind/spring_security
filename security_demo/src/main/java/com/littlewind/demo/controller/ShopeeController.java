@@ -17,12 +17,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import com.littlewind.demo.model.shopeerequest.AddItemImgBody;
+import com.littlewind.demo.model.shopeerequest.DeleteItemImgBody;
+import com.littlewind.demo.model.shopeerequest.UpdateItemImgBody;
 import com.littlewind.demo.util.MyConst;
 
 @RestController
@@ -30,6 +35,7 @@ import com.littlewind.demo.util.MyConst;
 public class ShopeeController {
 	
 	public static final long SHOP_ID = 205134;
+	public static final long TRANG_SHOP_ID = 94115363;
 	
 	Logger logger = LoggerFactory.getLogger(ShopeeController.class);
 	
@@ -43,14 +49,29 @@ public class ShopeeController {
 		return getItemDetail(item_id, shopid);
 	}
 	
-	@PostMapping("/test/updateItemImg")
-	public String updateProductImg(){
-		return updateItemImgTest();
-	}
-	
 	@GetMapping("/test/getItemImg")
 	public List<String> getProductImg(long item_id, long shopid){		
 		return getItemImg(item_id, shopid);
+	}
+	
+	@PostMapping("/test/updateItemImg")
+	public String updateProductImg(@RequestBody UpdateItemImgBody body){
+		return updateItemImg(body);
+	}
+
+	@PostMapping("/test/addItemImg")
+	public String addProductImg(@RequestBody AddItemImgBody body){		
+		return addItemImg(body);
+	}
+	
+//	@PostMapping("/test/insertItemImg")
+//	public String insertProductImg(){		
+//		return insertItemImgTest();
+//	}
+	
+	@PostMapping("/test/deleteItemImg")
+	public String deleteProductImg(@RequestBody DeleteItemImgBody body){		
+		return deleteItemImg(body);
 	}
 	
 	
@@ -87,18 +108,101 @@ public class ShopeeController {
 		return photos;
 	}
 	
-	private String updateItemImgTest() {
+	/*
+//	private String updateItemImgTest() {
+//		String bodyStr = "{" + 
+//				"\"shopid\": 94115363," + 
+//				"\"partner_id\": "+ MyConst.TEST_PARTNER_ID +"," + 
+//				"\"item_id\": 2625380256," + 
+//				"\"images\": [" + 
+//				"\"https://res.cloudinary.com/sapodecor/image/upload/v1565228874/op_lung_meo_2.jpg\"" + "," +
+//				"\"https://res.cloudinary.com/sapodecor/image/upload/v1565151104/test_zbeip1.png\"" +
+//				"]," + 
+//				"\"timestamp\": ";
+//		return callShopeeAPI(MyConst.UpdateItemImg_URL, bodyStr);
+//	}
+//	
+	*/
+	private String updateItemImg(UpdateItemImgBody body) {
 		String bodyStr = "{" + 
-				"\"shopid\": 205134," + 
-				"\"partner_id\": 840386," + 
-				"\"item_id\": 1531804," + 
+				"\"shopid\": "+body.getShopid()+"," + 
+				"\"partner_id\": "+body.getPartner_id() +"," + 
+				"\"item_id\": "+body.getItem_id()+"," + 
 				"\"images\": [" + 
-				"\"https://res.cloudinary.com/sapodecor/image/upload/v1565151104/test_zbeip1.png\"" + 
+				body.serializeImgURL() +
 				"]," + 
 				"\"timestamp\": ";
 		return callShopeeAPI(MyConst.UpdateItemImg_URL, bodyStr);
 	}
 	
+	/*
+//	private String addItemImgTest() {
+//		String bodyStr = "{"+
+//				"\"item_id\": 2625380256," + 
+//				"\"images\": [" + 
+//				"\"https://res.cloudinary.com/sapodecor/image/upload/v1565151104/test_zbeip1.png\"" + 
+//				"]," + 
+//				"\"partner_id\": 842940," + 
+//				"\"shopid\": 94115363," + 
+//				"\"timestamp\": ";
+//		return callShopeeAPI(MyConst.AddItemImg_URL, bodyStr);
+//	}
+	*/
+	
+	private String addItemImg(AddItemImgBody body) {
+		String bodyStr = "{"+
+				"\"item_id\": "+body.getItem_id()+"," + 
+				"\"images\": [" + 
+				body.serializeImgURL()+ 
+				"]," + 
+				"\"partner_id\": "+body.getPartner_id()+"," + 
+				"\"shopid\": "+body.getShopid()+"," + 
+				"\"timestamp\": ";
+		return callShopeeAPI(MyConst.AddItemImg_URL, bodyStr);
+	}
+	
+	/*
+//	private String insertItemImgTest() {
+//		String bodyStr = "{" + 
+//				"\"item_id\": 2625380256," + 
+//				"\"image_url\": " + "\"https://res.cloudinary.com/sapodecor/image/upload/v1563240575/samples/animals/cat.jpg\"" + ","+
+//				"\"image_position\": 2," + 
+//				"\"partner_id\": 842940," + 
+//				"\"shopid\": 94115363," + 
+//				"\"timestamp\": ";
+//		return callShopeeAPI(MyConst.InsertItemImg_URL, bodyStr);
+//	}
+	*/
+
+	/*
+	private String deleteItemImgTest() {
+		String bodyStr = "{" + 
+				"\"item_id\": 2625380256," + 
+				"\"images\": [\"https://cf.shopee.vn/file/03408b99a4500dfcc4fa0680b4142460\"]," + 
+				"\"positions\": [" + 
+				"3" + 
+				"]," + 
+				"\"partner_id\": 842940," + 
+				"\"shopid\": 94115363," + 
+				"\"timestamp\": ";
+		return callShopeeAPI(MyConst.DeleteItemImg_URL, bodyStr);
+	}
+	*/
+	
+	private String deleteItemImg(DeleteItemImgBody body) {
+		String bodyStr = "{" + 
+				"\"item_id\": "+body.getItem_id()+"," + 
+				"\"images\": ["+
+				body.serializeImgURL() +
+				"]," + 
+				"\"positions\": [" + 
+				body.serializePositions() + 
+				"]," + 
+				"\"partner_id\": "+body.getPartner_id()+"," + 
+				"\"shopid\": "+body.getShopid()+"," + 
+				"\"timestamp\": ";
+		return callShopeeAPI(MyConst.DeleteItemImg_URL, bodyStr);
+	}
 	
 	private String callShopeeAPI(String URL, String bodyStr) {
 	    
@@ -134,11 +238,11 @@ public class ShopeeController {
 
 
 	////////////
-	private void callGetAPI(String URL) {
-		RestTemplate restTemplate = new RestTemplate();
-	    String result = restTemplate.getForObject(URL, String.class);
-	    System.out.println(result);
-	}
+	/*
+	 * private void callGetAPI(String URL) { RestTemplate restTemplate = new
+	 * RestTemplate(); String result = restTemplate.getForObject(URL, String.class);
+	 * System.out.println(result); }
+	 */
 	
 	
 }
