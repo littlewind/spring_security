@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,10 +82,11 @@ public class PhotoController {
 		String userId = jwtTokenUtil.getIdFromToken(token);
 		String shop_id = String.valueOf(map.get("shop_id"));
 		String item_id = String.valueOf(map.get("item_id"));
-		int img_order = (int) map.get("img_order"); 
+//		int img_order = (int) map.get("img_order"); 
+		String id = UUID.randomUUID().toString().replace("-", "");
 		String photo_url = (String) map.get("photo_url");
-		System.out.println(photo_url.substring(0, 15));
-		Map<String, Object> result = uploadPhoto(userId, shop_id, item_id, img_order, photo_url);
+//		System.out.println(photo_url.substring(0, 15));
+		Map<String, Object> result = uploadPhoto(userId, shop_id, item_id, id, photo_url);
 		return result;
 	}
 	
@@ -105,8 +107,29 @@ public class PhotoController {
 	
 	
 	
+	@RequestMapping(value = "/image/update", method = RequestMethod.POST)
+	public <T> Map<String, Object> updPhoto(@RequestBody Map<String, T> body, @RequestHeader("Authorization") String token){
+		Map<String, Object> result = new HashMap<>();
+		String old_url = String.valueOf(body.get("old_url"));
+		if (token.startsWith("Bearer ")) {
+			token = token.substring(7);
+		}
+		String userId = jwtTokenUtil.getIdFromToken(token);
+		if(!userId.equals(old_url.split("/")[7])) {
+			result.put("success", 0);
+			return result;
+		}
+		String[] array = old_url.split("/",8);
+		String tmp = array[7];
+		String public_id = tmp.split("\\.")[0];
+		String photo_url = (String) body.get("update_url");
+		result = updatePhoto(public_id, photo_url);
+		return result;
+	}
+	
+	
 	@RequestMapping(value = "/image/delete", method = RequestMethod.DELETE)
-	public Object deleteImg(String shop_id, String item_id, int order, @RequestHeader("Authorization") String token) throws Exception {
+	public Object deleteImg(String shop_id, String item_id, String img_id, @RequestHeader("Authorization") String token) throws Exception {
 		if (token.startsWith("Bearer ")) {
 			token = token.substring(7);
 		}
@@ -118,7 +141,7 @@ public class PhotoController {
 		path.append("/");
 		path.append(item_id);
 		path.append("/");
-		path.append(order);
+		path.append(img_id);
 		ApiResponse response = cloudinary.api().deleteResources(Arrays.asList(path.toString()), ObjectUtils.emptyMap());  	
 		Object result = response.get("deleted");
 		return result;
@@ -225,7 +248,7 @@ public class PhotoController {
 	}
 	
 	
-	public Map<String, Object> uploadPhoto(String userId, String shop_id, String productCode, int id, String photo){
+	public Map<String, Object> uploadPhoto(String userId, String shop_id, String productCode, String id, String photo){
 		Map<String, Object> result = new HashMap<>();
 		result.put("success", 0);
 		
@@ -242,13 +265,31 @@ public class PhotoController {
 	     try {
 			Map uploadResult = cloudinary.uploader().upload(photo, params);
 			result.put("success", 1);
-			logger.debug(uploadResult.toString());
+//			logger.debug(uploadResult.toString());
+//			logger.debug(uploadResult.get("secure_url").toString());
+			result.put("url", uploadResult.get("secure_url").toString());
+			
 //			Set load = uploadResult.entrySet();
 //	    	for (Object obj : load) {
 //	    		System.out.println(obj);
 //	    	}
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	     
+	    return result;
+	}
+	
+	public Map<String, Object> updatePhoto(String public_id, String photo_url) {
+		Map<String, Object> result = new HashMap<>();
+		result.put("success", 0);
+		
+		Map params = ObjectUtils.asMap("public_id", public_id);
+	     try {
+			Map uploadResult = cloudinary.uploader().upload(photo_url, params);
+			result.put("success", 1);
+			result.put("url", uploadResult.get("secure_url").toString());
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	     

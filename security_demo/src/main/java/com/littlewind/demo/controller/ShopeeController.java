@@ -94,6 +94,12 @@ public class ShopeeController {
 		return callShopeeAPI(MyConst.GetItemDetail_URL, bodyStr);
 	}
 	
+//	private void getFullItemList(long shopid) {
+//		int offset = 0;
+//		int entries = 100;
+//		String bodyStr = String.format("{\"partner_id\": %d, \"shopid\": %d,\"pagination_entries_per_page\": %d, \"pagination_offset\": %d, \"timestamp\": ", MyConst.TEST_PARTNER_ID, shopid, entries, offset);
+//	}
+	
 	public List<String> getItemImg(long item_id, long shopid){
 		String itemDetail = getItemDetail(item_id, shopid);
 		JSONObject jObject = new JSONObject(itemDetail);

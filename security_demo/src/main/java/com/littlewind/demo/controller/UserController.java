@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,11 +28,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.littlewind.demo.model.PasswordResetToken;
+import com.littlewind.demo.model.Product;
 import com.littlewind.demo.model.Shop;
 import com.littlewind.demo.model.User;
 import com.littlewind.demo.model.UserBasicInfo;
 import com.littlewind.demo.model.UserLite;
 import com.littlewind.demo.repository.PasswordTokenRepository;
+import com.littlewind.demo.service.ProductService;
 import com.littlewind.demo.service.UserService;
 
 @RestController
@@ -39,6 +42,9 @@ import com.littlewind.demo.service.UserService;
 public class UserController {
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private ProductService productService;
     
     @Autowired
     private PasswordTokenRepository passwordTokenRepository;
@@ -73,6 +79,35 @@ public class UserController {
     	return result;
     }
     
+    @GetMapping("/products")
+    public List<Product> getProducts(long shopid) {
+        return productService.findByShopid(shopid);
+    }
+    
+//    @PostMapping("/products")
+//    public Map<String, Object> addProduct(@RequestBody Product product) {
+//        productService.save(product);
+//        Map<String, Object> result = new HashMap<>();
+//        result.put("success", 1);
+//        return result;
+//    }
+    
+    @PostMapping("/products")
+    public Map<String, Object> addProduct(@RequestBody Map<String,List<Product>> body) {
+    	List<Product> productList = body.get("products");
+    	addProductList(productList);
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", 1);
+        return result;
+    }
+    
+    @Transactional
+    private void addProductList(@RequestBody List<Product> productList) {
+    	for( Product product:productList) {
+    		logger.debug(product.toString());
+    		productService.save(product);
+    	}
+    }
     
     @GetMapping("/shop")
     public List<Shop> getShop(@RequestHeader("Authorization") String token) {
