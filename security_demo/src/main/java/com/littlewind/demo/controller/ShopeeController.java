@@ -2,10 +2,7 @@ package com.littlewind.demo.controller;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -17,7 +14,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 import com.littlewind.demo.model.shopeerequest.AddItemImgBody;
+import com.littlewind.demo.model.shopeerequest.DeleteItemBody;
 import com.littlewind.demo.model.shopeerequest.DeleteItemImgBody;
 import com.littlewind.demo.model.shopeerequest.UpdateItemImgBody;
 import com.littlewind.demo.util.MyConst;
@@ -72,6 +69,11 @@ public class ShopeeController {
 	@PostMapping("/test/deleteItemImg")
 	public String deleteProductImg(@RequestBody DeleteItemImgBody body){		
 		return deleteItemImg(body);
+	}
+	
+	@PostMapping("/test/deleteItem")
+	public String deleteProduct(@RequestBody DeleteItemBody body){		
+		return deleteItem(body);
 	}
 	
 	
@@ -208,6 +210,17 @@ public class ShopeeController {
 				"\"shopid\": "+body.getShopid()+"," + 
 				"\"timestamp\": ";
 		return callShopeeAPI(MyConst.DeleteItemImg_URL, bodyStr);
+	}
+	
+	
+	private String deleteItem(DeleteItemBody body) {
+		String bodyStr = "{" + 
+				"\"item_id\": "+body.getItem_id()+"," + 
+				"\"partner_id\": "+body.getPartner_id()+"," + 
+				"\"shopid\": "+body.getShopid()+"," + 
+				"\"timestamp\": ";
+		
+		return callShopeeAPI(MyConst.DeleteItem_URL, bodyStr);
 	}
 	
 	private String callShopeeAPI(String URL, String bodyStr) {

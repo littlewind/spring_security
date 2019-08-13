@@ -141,6 +141,11 @@ public class UserController {
         return userService.deleteShop(shop_id, token);
     }
     
+    @PostMapping("/shop/activate/{shop_id}")
+    public Set<Shop> activateShop(@PathVariable long shop_id,@RequestHeader("Authorization") String token) {
+        return userService.activateShop(shop_id, token);
+    }
+    
     @RequestMapping(value = "/user/info", method = RequestMethod.GET)
     public UserBasicInfo findUserByUserId(@RequestHeader("Authorization") String token) {
         return userService.findOne(token);
@@ -160,23 +165,35 @@ public class UserController {
     
     @PostMapping("/user/resetPassword")
 	public Map<String, Object> resetPassword(@RequestParam("email") String userEmail) {
-    Map<String, Object> result = new HashMap<>();
-	User user = userService.findByEmail(userEmail);
-	if (user == null) {
-	    result.put("success", 0);
-	    result.put("message", "Cannot find account with email: "+userEmail);
-	    return result;
+	    Map<String, Object> result = new HashMap<>();
+		User user = userService.findByEmail(userEmail);
+		if (user == null) {
+		    result.put("success", 0);
+		    result.put("message", "Cannot find account with email: "+userEmail);
+		    return result;
+		}
+		String token = UUID.randomUUID().toString().replace("-", "");
+		userService.createPasswordResetTokenForUser(user, token);
+		
+		sendEmail(token, userEmail);
+		
+		result.put("success", 1);
+		result.put("message", "A link to reset password has been sent to your email: "+userEmail);
+		
+		return result;
 	}
-	String token = UUID.randomUUID().toString().replace("-", "");
-	userService.createPasswordResetTokenForUser(user, token);
-	
-	sendEmail(token, userEmail);
-	
-	result.put("success", 1);
-	result.put("message", "A link to reset password has been sent to your email: "+userEmail);
-	
-	return result;
-	}
+    
+    @GetMapping("/user/resetPassword/checkToken")
+    public  Map<String, Object> checkPassResetToken(@RequestParam("token") String passwordResetToken) {
+    	Map<String, Object> result = new HashMap<>();
+    	boolean valid = passwordResetTokenExpiresInMoreThan5Min(passwordResetToken);
+    	if (valid) {
+    		result.put("valid", 1);
+    	} else {
+    		result.put("valid", 0);
+    	}
+    	return result;
+    }
     
     @PostMapping("/user/resetPassword/step2")
 	public Map<String, Object> resetPassword2(@RequestBody Map<String, String> body) {
@@ -209,20 +226,20 @@ public class UserController {
 				"\n" + 
 				"Follow this link to reset your password( this link will expire in 15 minutes):\n" + 
 				"\n\t" +
-				"https://google.com?token="+
+				"http://localhost:4200/reset-pass?token="+
 				token + 
 				"\n\n" + 
 				"If you didn’t ask to reset your password, you can ignore this email.\n" + 
 				"\n" + 
 				"Thanks,\n" + 
 				"\n" + 
-				"Your Sapo Decorate team";
+				"Your Sapo Editor team";
 		
         SimpleMailMessage msg = new SimpleMailMessage();
 //        msg.setTo("to_1@gmail.com", "to_2@gmail.com", "to_3@yahoo.com");
         msg.setTo(receiver);
         
-        msg.setSubject("Reset your password for Sapo Decorate");
+        msg.setSubject("Reset your password for Sapo Editor");
         msg.setText(content);
 
 //        javaMailSender.send(msg);
@@ -261,5 +278,29 @@ public class UserController {
         }
     
         return passToken; // valid token
+    }
+    
+    public boolean passwordResetTokenExpiresInMoreThan5Min(String token) {
+
+    	logger.debug("String token:  "+token);
+        PasswordResetToken passToken = passwordTokenRepository.findByToken(token);
+        
+        if (passToken == null ) {
+        	logger.error("PasswordResetToken passToken is null");
+        	return false;
+        	
+        }
+        if (passToken != null) {     
+	        Calendar cal = Calendar.getInstance();
+	        if ((passToken.getExpiryDate()
+	            .getTime() - cal.getTime()
+	            .getTime()) <= (5*60*1000)) {
+
+	        	logger.error("token expired");
+	            return false;	// expired token or expire < 5 min
+	        }
+        }
+    
+        return true; // valid token
     }
 }

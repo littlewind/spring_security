@@ -23,6 +23,8 @@ public interface UserService {
 	Set<Shop> removeShop(long shop_id, String token);
 	
 	Set<Shop> deleteShop(long shop_id, String token);
+	
+	Set<Shop> activateShop(long shop_id, String token);
 
 	Map<String, Object> changeInfo(UserLite user, String token);
 
@@ -33,6 +35,8 @@ public interface UserService {
 	public void createPasswordResetTokenForUser(final User user, final String token);
 	
 	public void resetPassword(User user, String new_password);
+
+
 
 
 }

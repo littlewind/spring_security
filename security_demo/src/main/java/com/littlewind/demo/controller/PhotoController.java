@@ -2,11 +2,13 @@ package com.littlewind.demo.controller;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -127,7 +129,7 @@ public class PhotoController {
 		return result;
 	}
 	
-	
+	/*
 	@RequestMapping(value = "/image/delete", method = RequestMethod.DELETE)
 	public Object deleteImg(String shop_id, String item_id, String img_id, @RequestHeader("Authorization") String token) throws Exception {
 		if (token.startsWith("Bearer ")) {
@@ -144,6 +146,34 @@ public class PhotoController {
 		path.append(img_id);
 		ApiResponse response = cloudinary.api().deleteResources(Arrays.asList(path.toString()), ObjectUtils.emptyMap());  	
 		Object result = response.get("deleted");
+		return result;
+	}
+	*/
+	
+	@RequestMapping(value = "/image/delete", method = RequestMethod.DELETE)
+//	public Object deleteImg(String url, @RequestHeader("Authorization") String token) throws Exception {
+	public Object deleteImg(@RequestBody Map<String, List<String>> body, @RequestHeader("Authorization") String token) throws Exception {
+		List<String> urlList = body.get("URLs");
+		if (token.startsWith("Bearer ")) {
+			token = token.substring(7);
+		}
+		String userId = jwtTokenUtil.getIdFromToken(token);
+		
+		List<Object> result = new ArrayList<>();
+		for( String url:urlList) {
+			if(!userId.equals(url.split("/")[7])) {
+				return new HashMap<>().put("deleted", -1);
+			}
+			String[] array = url.split("/",8);
+			String tmp = array[7];
+			String public_id = tmp.split("\\.")[0];
+			ApiResponse response = cloudinary.api().deleteResources(Arrays.asList(public_id), ObjectUtils.emptyMap());
+			HashMap<String, String> tempObject = (HashMap<String, String>) response.get("deleted");
+			Map<String, String> map = new HashMap<>();
+			map.put("url", url);
+			map.put("status", tempObject.get(public_id));
+			result.add(map);
+		}
 		return result;
 	}
 	
@@ -170,23 +200,23 @@ public class PhotoController {
 	/////
 	/////
 	///////////////////////////////////////////////////////////////////
-	public List<String> listPhotos(String userId) throws Exception {
-		StringBuilder param = new StringBuilder();
-		List<String> photos = new ArrayList<>();
-		param.append("folder = ");
-		param.append(userId);
-		param.append("/*");
-		ApiResponse result = cloudinary.search().expression(param.toString()).execute();
-		Object tmp = result.get("resources");
-    	ArrayList arr = (ArrayList)tmp;
-    	Object[] objs = arr.toArray();
-    	for (Object obj : objs) {
-    		HashMap temp = (HashMap) obj;
-    		System.out.println(temp.get("url").toString());
-    		photos.add(temp.get("url").toString());
-    	}
-    	return photos;
-	}
+//	public List<String> listPhotos(String userId) throws Exception {
+//		StringBuilder param = new StringBuilder();
+//		List<String> photos = new ArrayList<>();
+//		param.append("folder = ");
+//		param.append(userId);
+//		param.append("/*");
+//		ApiResponse result = cloudinary.search().expression(param.toString()).execute();
+//		Object tmp = result.get("resources");
+//    	ArrayList arr = (ArrayList)tmp;
+//    	Object[] objs = arr.toArray();
+//    	for (Object obj : objs) {
+//    		HashMap temp = (HashMap) obj;
+////    		System.out.println(temp.get("url").toString());
+//    		photos.add(temp.get("url").toString());
+//    	}
+//    	return photos;
+//	}
 	
 	public List<String> listShopPhotos(String userId, String shop_id) throws Exception {
 		StringBuilder param = new StringBuilder();
@@ -202,7 +232,7 @@ public class PhotoController {
     	Object[] objs = arr.toArray();
     	for (Object obj : objs) {
     		HashMap temp = (HashMap) obj;
-    		System.out.println(temp.get("url").toString());
+//    		System.out.println(temp.get("url").toString());
     		photos.add(temp.get("url").toString());
     	}
     	return photos;

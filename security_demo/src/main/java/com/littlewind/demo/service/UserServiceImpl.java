@@ -167,6 +167,24 @@ public class UserServiceImpl implements UserService {
 
 		return user.getShop();
 	}
+	
+	@Override
+	public Set<Shop> activateShop(long shop_id, String token) {
+		if (token.startsWith("Bearer ")) {
+			token = token.substring(7);
+		}
+		String uid = jwtTokenUtil.getIdFromToken(token);
+		User user = userRepository.findById(Long.valueOf(uid)).get();
+		for (Shop shop: user.getShop()) {
+			if (shop.getShop_id()==shop_id) {
+				shop.setStatus(1L);
+				shopRepository.save(shop);
+				return user.getShop();
+			}
+		}
+
+		return user.getShop();
+	}
 
 	@Override
 	public Map<String, Object> changeInfo(UserLite user, String token) {
@@ -234,6 +252,8 @@ public class UserServiceImpl implements UserService {
 		user.setPassword(bCryptPasswordEncoder.encode(new_password));
 		userRepository.save(user);
 	}
+
+
 
 
 }
