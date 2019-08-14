@@ -186,7 +186,7 @@ public class UserController {
     @GetMapping("/user/resetPassword/checkToken")
     public  Map<String, Object> checkPassResetToken(@RequestParam("token") String passwordResetToken) {
     	Map<String, Object> result = new HashMap<>();
-    	boolean valid = passwordResetTokenExpiresInMoreThan5Min(passwordResetToken);
+    	boolean valid = isValidPassResetToken(passwordResetToken);
     	if (valid) {
     		result.put("valid", 1);
     	} else {
@@ -210,6 +210,8 @@ public class UserController {
 		
 		User user = passToken.getUser();
 		userService.resetPassword(user, new_password);
+		passToken.setUsed(true);
+		passwordTokenRepository.save(passToken);
 		
 		result.put("success", 1);
 		return result;
@@ -226,7 +228,7 @@ public class UserController {
 				"\n" + 
 				"Follow this link to reset your password( this link will expire in 15 minutes):\n" + 
 				"\n\t" +
-				"http://localhost:4200/reset-pass?token="+
+				"http://192.168.36.20:4200/reset-pass?token="+
 				token + 
 				"\n\n" + 
 				"If you didn’t ask to reset your password, you can ignore this email.\n" + 
@@ -266,7 +268,10 @@ public class UserController {
         	logger.error("PasswordResetToken passToken is null");
         	
         }
-        if (passToken != null) {     
+        if (passToken != null) {
+        	if (passToken.isUsed()) {
+        		return null;
+        	}
 	        Calendar cal = Calendar.getInstance();
 	        if ((passToken.getExpiryDate()
 	            .getTime() - cal.getTime()
@@ -280,7 +285,7 @@ public class UserController {
         return passToken; // valid token
     }
     
-    public boolean passwordResetTokenExpiresInMoreThan5Min(String token) {
+    public boolean isValidPassResetToken(String token) {
 
     	logger.debug("String token:  "+token);
         PasswordResetToken passToken = passwordTokenRepository.findByToken(token);
@@ -290,14 +295,17 @@ public class UserController {
         	return false;
         	
         }
-        if (passToken != null) {     
+        if (passToken != null) {
+        	if (passToken.isUsed()) {
+        		return false;
+        	}
 	        Calendar cal = Calendar.getInstance();
 	        if ((passToken.getExpiryDate()
 	            .getTime() - cal.getTime()
-	            .getTime()) <= (5*60*1000)) {
+	            .getTime()) <= (3*60*1000)) {
 
 	        	logger.error("token expired");
-	            return false;	// expired token or expire < 5 min
+	            return false;	// expired token or expire < 3 min
 	        }
         }
     

@@ -2,10 +2,7 @@ package com.littlewind.demo.controller;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -27,6 +24,7 @@ import org.springframework.web.client.RestTemplate;
 import com.littlewind.demo.model.shopeerequest.AddItemImgBody;
 import com.littlewind.demo.model.shopeerequest.DeleteItemBody;
 import com.littlewind.demo.model.shopeerequest.DeleteItemImgBody;
+import com.littlewind.demo.model.shopeerequest.GetCategoriesBody;
 import com.littlewind.demo.model.shopeerequest.GetShopInfoBody;
 import com.littlewind.demo.model.shopeerequest.UpdateItemImgBody;
 import com.littlewind.demo.util.MyConst;
@@ -93,7 +91,13 @@ public class ShopeeController {
 		return getShopInformation(body);
 	}
 	
+	@PostMapping("/test/getCategories")
+	public String getCategories(@RequestBody GetCategoriesBody body){		
+		return getItemCategories(body);
+	}
 	
+	
+
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	///////////////////
 	///////////////////
@@ -247,6 +251,14 @@ public class ShopeeController {
 		return callShopeeAPI(MyConst.GetShopInfo_URL, bodyStr);
 	}
 
+	private String getItemCategories(GetCategoriesBody body) {
+		String bodyStr = "{" + 
+				"\"partner_id\": "+body.getPartner_id()+"," + 
+				"\"shopid\": "+body.getShopid()+"," +
+				"\"language\": \"vi\""+ "," + 
+				"\"timestamp\": ";
+		return callShopeeAPI(MyConst.GetCategories_URL, bodyStr);
+	}
 	
 	private String callShopeeAPI(String URL, String bodyStr) {
 	    

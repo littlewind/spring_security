@@ -14,7 +14,7 @@ import javax.persistence.OneToOne;
 @Entity
 public class PasswordResetToken {
   
-    private static final int EXPIRATION = 15;	// minutes for token to be expired
+    private static final int EXPIRATION = 18;	// minutes for token to be expired
   
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -27,6 +27,8 @@ public class PasswordResetToken {
     private User user;
   
     private Date expiryDate;
+    
+    private boolean used = false;
 
 	public PasswordResetToken() {
 		super();
@@ -44,6 +46,17 @@ public class PasswordResetToken {
 		this.token = token;
 		this.user = user;
 		this.expiryDate = calculateExpiryDate(EXPIRATION);
+	}
+	
+	
+
+	public PasswordResetToken(Long id, String token, User user, boolean used) {
+		super();
+		this.id = id;
+		this.token = token;
+		this.user = user;
+		this.expiryDate = calculateExpiryDate(EXPIRATION);
+		this.used = used;
 	}
 
 	public Long getId() {
@@ -90,8 +103,16 @@ public class PasswordResetToken {
         this.token = token;
         this.expiryDate = calculateExpiryDate(EXPIRATION);
     }
+    
+    public boolean isUsed() {
+		return used;
+	}
 
-    @Override
+	public void setUsed(boolean used) {
+		this.used = used;
+	}
+
+	@Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
@@ -140,7 +161,7 @@ public class PasswordResetToken {
     @Override
     public String toString() {
         final StringBuilder builder = new StringBuilder();
-        builder.append("Token [String=").append(token).append("]").append("[Expires").append(expiryDate).append("]");
+        builder.append("Token [String=").append(token).append("]").append("[Expires:").append(expiryDate).append("]").append("[Used:").append(used).append("]");
         return builder.toString();
     }
     
