@@ -17,4 +17,5 @@ public class MyConst {
 	public static final String InsertItemImg_URL = "https://partner.shopeemobile.com/api/v1/item/img/insert";
 	public static final String DeleteItemImg_URL = "https://partner.shopeemobile.com/api/v1/item/img/delete";
 	public static final String DeleteItem_URL = "https://partner.shopeemobile.com/api/v1/item/delete";
+	public static final String GetShopInfo_URL = "https://partner.shopeemobile.com/api/v1/shop/get";
 }

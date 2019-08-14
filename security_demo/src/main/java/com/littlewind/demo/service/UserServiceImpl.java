@@ -178,6 +178,7 @@ public class UserServiceImpl implements UserService {
 		for (Shop shop: user.getShop()) {
 			if (shop.getShop_id()==shop_id) {
 				shop.setStatus(1L);
+				shop.setCreateDate(new Date());
 				shopRepository.save(shop);
 				return user.getShop();
 			}

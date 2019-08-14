@@ -2,7 +2,10 @@ package com.littlewind.demo.controller;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -24,6 +27,7 @@ import org.springframework.web.client.RestTemplate;
 import com.littlewind.demo.model.shopeerequest.AddItemImgBody;
 import com.littlewind.demo.model.shopeerequest.DeleteItemBody;
 import com.littlewind.demo.model.shopeerequest.DeleteItemImgBody;
+import com.littlewind.demo.model.shopeerequest.GetShopInfoBody;
 import com.littlewind.demo.model.shopeerequest.UpdateItemImgBody;
 import com.littlewind.demo.util.MyConst;
 
@@ -76,6 +80,18 @@ public class ShopeeController {
 		return deleteItem(body);
 	}
 	
+//	@PostMapping("/test/noItems")
+//	public Map<String, Integer> getNoItems(long partner_id, long shopid){		
+//		Map<String, Integer> result = new HashMap<>();
+//		String bodyStr = 
+//		String itemListStr = 
+//		return result;
+//	}
+	
+	@PostMapping("/test/getShopInfo")
+	public String getShopInfo(@RequestBody GetShopInfoBody body){		
+		return getShopInformation(body);
+	}
 	
 	
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -222,6 +238,15 @@ public class ShopeeController {
 		
 		return callShopeeAPI(MyConst.DeleteItem_URL, bodyStr);
 	}
+	
+	private String getShopInformation(GetShopInfoBody body) {
+		String bodyStr = "{" + 
+				"\"partner_id\": "+body.getPartner_id()+"," + 
+				"\"shopid\": "+body.getShopid()+"," + 
+				"\"timestamp\": ";
+		return callShopeeAPI(MyConst.GetShopInfo_URL, bodyStr);
+	}
+
 	
 	private String callShopeeAPI(String URL, String bodyStr) {
 	    
