@@ -228,7 +228,7 @@ public class UserController {
 				"\n" + 
 				"Follow this link to reset your password( this link will expire in 15 minutes):\n" + 
 				"\n\t" +
-				"http://192.168.36.20:4200/reset-pass?token="+
+				"http://192.168.36.20:4200/reset?token="+
 				token + 
 				"\n\n" + 
 				"If you didn’t ask to reset your password, you can ignore this email.\n" + 
