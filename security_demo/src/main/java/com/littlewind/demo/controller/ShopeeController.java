@@ -11,6 +11,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -21,12 +22,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import com.littlewind.demo.model.Product;
 import com.littlewind.demo.model.shopeerequest.AddItemImgBody;
 import com.littlewind.demo.model.shopeerequest.DeleteItemBody;
 import com.littlewind.demo.model.shopeerequest.DeleteItemImgBody;
 import com.littlewind.demo.model.shopeerequest.GetCategoriesBody;
 import com.littlewind.demo.model.shopeerequest.GetShopInfoBody;
 import com.littlewind.demo.model.shopeerequest.UpdateItemImgBody;
+import com.littlewind.demo.service.ProductService;
 import com.littlewind.demo.util.MyConst;
 
 @RestController
@@ -35,6 +38,9 @@ public class ShopeeController {
 	
 	public static final long SHOP_ID = 205134;
 	public static final long TRANG_SHOP_ID = 94115363;
+	
+    @Autowired
+    private ProductService productService;
 	
 	Logger logger = LoggerFactory.getLogger(ShopeeController.class);
 	
@@ -160,7 +166,19 @@ public class ShopeeController {
 				body.serializeImgURL() +
 				"]," + 
 				"\"timestamp\": ";
-		return callShopeeAPI(MyConst.UpdateItemImg_URL, bodyStr);
+		String result = callShopeeAPI(MyConst.UpdateItemImg_URL, bodyStr);
+		JSONObject jObject = new JSONObject(result);
+		String msg = jObject.getString("msg");
+		if (msg == null || !(msg.equals("Update item image success") || msg.equals("Nothing change for images"))) {
+			logger.debug("Update failed");
+			Product product = new Product(body.getItem_id(), 0, body.getShopid());
+			productService.save(product);
+		} else {
+			logger.debug("Update successfully");
+			Product product = new Product(body.getItem_id(), 1, body.getShopid());
+			productService.save(product);
+		}
+		return result;
 	}
 	
 	/*
