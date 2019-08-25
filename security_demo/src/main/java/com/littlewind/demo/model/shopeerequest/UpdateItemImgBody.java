@@ -42,6 +42,9 @@ public class UpdateItemImgBody {
 	}
 	
 	public String serializeImgURL() {
+		if (this.images == null || this.images.size()==0) {
+			return "";
+		}
 		StringBuilder sb = new StringBuilder();
 		for (String url:this.images) {
 			sb.append("\"");

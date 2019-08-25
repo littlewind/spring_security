@@ -175,7 +175,7 @@ public class UserController {
 		String token = UUID.randomUUID().toString().replace("-", "");
 		userService.createPasswordResetTokenForUser(user, token);
 		
-		sendEmail(token, userEmail);
+		sendEmail(token, userEmail, user.getUsername());
 		
 		result.put("success", 1);
 		result.put("message", "A link to reset password has been sent to your email: "+userEmail);
@@ -218,30 +218,38 @@ public class UserController {
     }
     
     @Async
-    void sendEmail(String token, String receiver) {
+    void sendEmail(String token, String receiver, String receiverName) {
     	int noOfQuickServiceThreads = 5;
     	
     	ScheduledExecutorService quickService = Executors.newScheduledThreadPool(noOfQuickServiceThreads); // Creates a thread pool that reuses fixed number of threads(as specified by noOfThreads in this case).
     	
     	
-		String content = "Hello,\n" + 
+		String content = "Thân gửi anh/chị " + receiverName + ",\n" +
 				"\n" + 
-				"Follow this link to reset your password( this link will expire in 15 minutes):\n" + 
+				"Sapo editor nhận được yêu cầu thay đổi mật khẩu của anh/chị.\n" + 
+				"Để đổi lại mật khẩu, anh/ chị hãy nhấp vào link sau( link sẽ hết hạn sau 15 phút):" +
 				"\n\t" +
-				"http://192.168.36.20:4200/reset?token="+
+				"http://172.104.47.79:4200/reset?token="+
 				token + 
 				"\n\n" + 
-				"If you didn’t ask to reset your password, you can ignore this email.\n" + 
+				"Ngoài ra, anh/chị có bất cứ câu hỏi nào cần được hỗ trợ, hãy liên hệ với Sapo Editor theo số hotline: 0975867756 hoặc email: sapoeditor@gmail.com . Đội ngũ chăm sóc khách hàng của chúng tôi sẽ giúp anh/chị giải đáp thắc mắc một cách nhanh nhất. \n" + 
 				"\n" + 
-				"Thanks,\n" + 
+				"Cảm ơn anh/chị đã tin tưởng, lựa chọn Sapo Editor!\n" + 
 				"\n" + 
-				"Your Sapo Editor team";
+				"Trân trọng,\n" + 
+				"\n\n"+
+				"SAPO\n"+
+				"Office: 8th Floor, Ladeco Building, 266 Doi Can, Ba Dinh, Hanoi \n" + 
+				"                                      Website: https://www.sapo.vn/ ";
 		
-        SimpleMailMessage msg = new SimpleMailMessage();
+		String subject = "Anh/chị " + receiverName + " vừa thực hiện thao tác lấy lại mật khẩu cho tài khoản?";
+		
+		SimpleMailMessage msg = new SimpleMailMessage();
 //        msg.setTo("to_1@gmail.com", "to_2@gmail.com", "to_3@yahoo.com");
         msg.setTo(receiver);
         
-        msg.setSubject("Reset your password for Sapo Editor");
+      
+        msg.setSubject(subject);
         msg.setText(content);
 
 //        javaMailSender.send(msg);

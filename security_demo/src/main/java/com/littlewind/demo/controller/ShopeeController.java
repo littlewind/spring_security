@@ -204,7 +204,20 @@ public class ShopeeController {
 				"\"partner_id\": "+body.getPartner_id()+"," + 
 				"\"shopid\": "+body.getShopid()+"," + 
 				"\"timestamp\": ";
-		return callShopeeAPI(MyConst.AddItemImg_URL, bodyStr);
+//		return callShopeeAPI(MyConst.AddItemImg_URL, bodyStr);
+		String result = callShopeeAPI(MyConst.AddItemImg_URL, bodyStr);
+		JSONObject jObject = new JSONObject(result);
+		String msg = jObject.getString("msg");
+		if (msg == null || !(msg.equals("Add item image success") || msg.equals("Nothing change for images"))) {
+			logger.debug("Update failed");
+			Product product = new Product(body.getItem_id(), 0, body.getShopid());
+			productService.save(product);
+		} else {
+			logger.debug("Update successfully");
+			Product product = new Product(body.getItem_id(), 1, body.getShopid());
+			productService.save(product);
+		}
+		return result;
 	}
 	
 	/*
