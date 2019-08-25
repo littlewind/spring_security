@@ -45,12 +45,12 @@ public class UserServiceImpl implements UserService {
     
     @Override
     public User save(User user) {
-        user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
-
-        if (findByEmail(user.getEmail()) != null) {
+    	if (findByEmail(user.getEmail()) != null || user.getPassword()==null || user.getPassword().equals("")) {
         	user.setSuccess(0);
         	return user;
         }
+    	
+        user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
         userRepository.save(user);
         User returned_user = findByEmail(user.getEmail());
         returned_user.setSuccess(1);
@@ -226,7 +226,7 @@ public class UserServiceImpl implements UserService {
 		User mUser = userRepository.findById(Long.valueOf(uid)).get();
 		
 		// check the confirm password, if not match -> return false
-		if (!bCryptPasswordEncoder.matches(old_password, mUser.getPassword())) {
+		if (!bCryptPasswordEncoder.matches(old_password, mUser.getPassword()) || new_password==null || new_password.equals("")) {
 			result.put("success", 0);
 			return result;
 		}

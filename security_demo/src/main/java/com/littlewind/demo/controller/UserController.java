@@ -203,7 +203,7 @@ public class UserController {
 		
 		PasswordResetToken passToken = validatePasswordResetToken(token);
 		
-		if (passToken==null) {
+		if (passToken==null || new_password==null || new_password.equals("")) {
 			result.put("success", 0);
 			return result;
 		}
