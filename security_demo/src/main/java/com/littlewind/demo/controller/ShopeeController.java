@@ -3,6 +3,8 @@ package com.littlewind.demo.controller;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -18,11 +20,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import com.littlewind.demo.customexception.ShopNotLinkedException;
 import com.littlewind.demo.model.Product;
+import com.littlewind.demo.model.Shop;
+import com.littlewind.demo.model.User;
 import com.littlewind.demo.model.shopeerequest.AddItemImgBody;
 import com.littlewind.demo.model.shopeerequest.DeleteItemBody;
 import com.littlewind.demo.model.shopeerequest.DeleteItemImgBody;
@@ -30,6 +36,8 @@ import com.littlewind.demo.model.shopeerequest.GetCategoriesBody;
 import com.littlewind.demo.model.shopeerequest.GetShopInfoBody;
 import com.littlewind.demo.model.shopeerequest.UpdateItemImgBody;
 import com.littlewind.demo.service.ProductService;
+import com.littlewind.demo.service.UserService;
+import com.littlewind.demo.util.JwtTokenUtil;
 import com.littlewind.demo.util.MyConst;
 
 @RestController
@@ -41,31 +49,52 @@ public class ShopeeController {
 	
     @Autowired
     private ProductService productService;
+    
+    @Autowired
+    private UserService userService;
+    
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
 	
 	Logger logger = LoggerFactory.getLogger(ShopeeController.class);
 	
 	@GetMapping("/test/getItemList")
-	public String ahihi(int offset, int entries, long shopid) {
+	public String ahihi(@RequestHeader("Authorization") String token, int offset, int entries, long shopid) throws ShopNotLinkedException {
+		if (!hasShop(token, shopid)) {
+			throw new ShopNotLinkedException();
+		}
 		return getItemList(offset, entries, shopid);
 	}
 	
 	@GetMapping("/test/getItemDetail")
-	public String getProductDetail(long item_id, long shopid) {
+	public String getProductDetail(@RequestHeader("Authorization") String token, long item_id, long shopid) throws ShopNotLinkedException {
+		if (!hasShop(token, shopid)) {
+			throw new ShopNotLinkedException();
+		}
 		return getItemDetail(item_id, shopid);
 	}
 	
 	@GetMapping("/test/getItemImg")
-	public List<String> getProductImg(long item_id, long shopid){		
+	public List<String> getProductImg(@RequestHeader("Authorization") String token, long item_id, long shopid) throws ShopNotLinkedException{
+		if (!hasShop(token, shopid)) {
+			throw new ShopNotLinkedException();
+		}
 		return getItemImg(item_id, shopid);
 	}
 	
 	@PostMapping("/test/updateItemImg")
-	public String updateProductImg(@RequestBody UpdateItemImgBody body){
+	public String updateProductImg(@RequestHeader("Authorization") String token, @RequestBody UpdateItemImgBody body) throws ShopNotLinkedException{
+		if (!hasShop(token, body.getShopid())) {
+			throw new ShopNotLinkedException();
+		}
 		return updateItemImg(body);
 	}
 
 	@PostMapping("/test/addItemImg")
-	public String addProductImg(@RequestBody AddItemImgBody body){		
+	public String addProductImg(@RequestHeader("Authorization") String token, @RequestBody AddItemImgBody body) throws ShopNotLinkedException{		
+		if (!hasShop(token, body.getShopid())) {
+			throw new ShopNotLinkedException();
+		}
 		return addItemImg(body);
 	}
 	
@@ -75,12 +104,18 @@ public class ShopeeController {
 //	}
 	
 	@PostMapping("/test/deleteItemImg")
-	public String deleteProductImg(@RequestBody DeleteItemImgBody body){		
+	public String deleteProductImg(@RequestHeader("Authorization") String token, @RequestBody DeleteItemImgBody body) throws ShopNotLinkedException{
+		if (!hasShop(token, body.getShopid())) {
+			throw new ShopNotLinkedException();
+		}
 		return deleteItemImg(body);
 	}
 	
 	@PostMapping("/test/deleteItem")
-	public String deleteProduct(@RequestBody DeleteItemBody body){		
+	public String deleteProduct(@RequestHeader("Authorization") String token, @RequestBody DeleteItemBody body) throws ShopNotLinkedException{
+		if (!hasShop(token, body.getShopid())) {
+			throw new ShopNotLinkedException();
+		}
 		return deleteItem(body);
 	}
 	
@@ -93,12 +128,18 @@ public class ShopeeController {
 //	}
 	
 	@PostMapping("/test/getShopInfo")
-	public String getShopInfo(@RequestBody GetShopInfoBody body){		
+	public String getShopInfo(@RequestHeader("Authorization") String token, @RequestBody GetShopInfoBody body) throws ShopNotLinkedException{	
+		if (!hasShop(token, body.getShopid())) {
+			throw new ShopNotLinkedException();
+		}
 		return getShopInformation(body);
 	}
 	
 	@PostMapping("/test/getCategories")
-	public String getCategories(@RequestBody GetCategoriesBody body){		
+	public String getCategories(@RequestHeader("Authorization") String token, @RequestBody GetCategoriesBody body) throws ShopNotLinkedException{		
+		if (!hasShop(token, body.getShopid())) {
+			throw new ShopNotLinkedException();
+		}
 		return getItemCategories(body);
 	}
 	
@@ -331,5 +372,21 @@ public class ShopeeController {
 	 * System.out.println(result); }
 	 */
 	
+	private boolean hasShop(String token, long shopid) {
+		if (token.startsWith("Bearer ")) {
+			token = token.substring(7);
+		}
+		String email = jwtTokenUtil.getUsernameFromToken(token);
+		User user = userService.findByEmail(email);
+		
+		Set<Shop> shops = user.getShop();
+		for( Shop shop:shops) {
+			if (shop.getShop_id() == shopid) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
 	
 }

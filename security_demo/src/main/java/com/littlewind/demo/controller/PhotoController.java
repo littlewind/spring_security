@@ -233,7 +233,7 @@ public class PhotoController {
     	for (Object obj : objs) {
     		HashMap temp = (HashMap) obj;
 //    		System.out.println(temp.get("url").toString());
-    		photos.add(temp.get("url").toString());
+    		photos.add(temp.get("secure_url").toString());
     	}
     	return photos;
 	}
@@ -271,7 +271,7 @@ public class PhotoController {
     	for (Object obj : objs) {
     		HashMap temp = (HashMap) obj;
 //    		System.out.println(temp.get("url").toString());
-    		photos.add(temp.get("url").toString());
+    		photos.add(temp.get("secure_url").toString());
     	}
     	return photos;
 		
