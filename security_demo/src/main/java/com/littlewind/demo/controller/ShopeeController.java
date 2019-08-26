@@ -129,9 +129,9 @@ public class ShopeeController {
 	
 	@PostMapping("/test/getShopInfo")
 	public String getShopInfo(@RequestHeader("Authorization") String token, @RequestBody GetShopInfoBody body) throws ShopNotLinkedException{	
-		if (!hasShop(token, body.getShopid())) {
-			throw new ShopNotLinkedException();
-		}
+//		if (!hasShop(token, body.getShopid())) {
+//			throw new ShopNotLinkedException();
+//		}
 		return getShopInformation(body);
 	}
 	
