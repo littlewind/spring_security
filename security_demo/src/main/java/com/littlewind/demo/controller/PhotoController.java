@@ -246,7 +246,6 @@ public class PhotoController {
 			List<String> photoList = listShopPhotos(userId, shop_id);
 			Map<String, Object> shop_photos = new HashMap<>();
 			shop_photos.put("shop_id", shop.getShop_id());
-			shop_photos.put("name", shop.getName());
 			shop_photos.put("photos", photoList);
 			result.add(shop_photos);
 		}
